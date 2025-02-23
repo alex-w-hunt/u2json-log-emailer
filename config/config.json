@@ -1,0 +1,10 @@
+{
+    "log_file":"u2log_file",
+    "log_folder":"u2log_folder",
+    "email_interval":3600,
+    "email_service":"Gmail",
+    "email_from":"",
+    "email_to":"",
+    "smtp_server":"smtp.gmail.com",
+    "smtp_port":465
+}
