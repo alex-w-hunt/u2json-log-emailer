@@ -19,6 +19,7 @@ class EventHandler(FileSystemEventHandler):
             self.alerted = 0
         # Upon even trigger and not alerted, process the events and send the email
         if (event.src_path == LOG_FILE) and (self.alerted == 0):
+            print("Goodbye")
             time.sleep(60)
             self.alerted = 1
             self.last_modified_time = time.time()
@@ -50,6 +51,8 @@ class Event:
         self.event_id = event_id
         self.msg = msg
         self.ip = ip
+
+print("Hi")
 
 with open('..\\config\\config.json') as file:
     CONFIG = json.load(file)
