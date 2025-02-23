@@ -14,6 +14,7 @@ class EventHandler(FileSystemEventHandler):
     alerted = 0
     last_modified_time = 0
     def on_any_event(self, event: FileSystemEvent) -> None:
+        self.event_timer = time.time() - 1
         # Check if we have already alerted within the given email_interval (config)
         if (event.src_path == LOG_FILE) and (self.alerted == 1) and (time.time() > self.last_modified_time + EMAIL_INTERVAL):
             self.alerted = 0
@@ -22,7 +23,7 @@ class EventHandler(FileSystemEventHandler):
             time.sleep(60)
             self.alerted = 1
             self.last_modified_time = time.time()
-            log_array = process_events()
+            log_array = process_events(self.event_timer)
             # log_entries = List<LogEntry>
             log_entries = process_log_array(log_array)
             analytics = get_analytics(log_entries)
@@ -152,10 +153,11 @@ def get_previous_midnight():
     previous_midnight_datetime = datetime.datetime.combine(previous_day,datetime.time.min)
     return previous_midnight_datetime.timestamp()
 
-def get_last60():
-    current_timestamp = time.time()
-    sixty_ago_timestamp = current_timestamp - 60
-    return sixty_ago_timestamp
+# Not necessary
+#def get_last60():
+#    current_timestamp = time.time()
+#    sixty_ago_timestamp = current_timestamp - 60
+#    return sixty_ago_timestamp
 
 def is_event_yesterday(log):
     log_type = log["type"]
@@ -173,7 +175,7 @@ def is_event_yesterday(log):
     else:
         return False
     
-def is_event_last60(log):
+def is_event_last60(log, event_timer):
     log_type = log["type"]
     if log_type == "packet":
         timestamp = log["packet"]["event-second"]
@@ -182,9 +184,7 @@ def is_event_last60(log):
     else:
         timestamp = None
 
-    last60 = get_last60()
-
-    if (timestamp != None) and (timestamp >= last60):
+    if (timestamp != None) and (timestamp >= event_timer):
         return True
     else:
         return False    
@@ -232,12 +232,12 @@ def process_log_array(log_array):
     return log_entries
 
 # Potentially need error handling in case non-json is passed into is_event_today
-def process_events():
+def process_events(event_timer):
     with FileReadBackwards(LOG_FILE, encoding="UTF-8") as log_file:
         logs = []
         for line in log_file:
             log = json.loads(line)
-            if is_event_last60(log):
+            if is_event_last60(log, event_timer):
                 logs.append(log)
             else:
                 return logs
@@ -254,7 +254,6 @@ def process_events_day():
                 return logs
         return logs
                 
-
 event_handler = EventHandler()
 observer = Observer()
 observer.schedule(event_handler, LOG_FOLDER, recursive=True)
