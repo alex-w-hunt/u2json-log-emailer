@@ -1,7 +1,10 @@
 # u2json-log-emailer
-u2json-log-emailer works within the Snort and u2json pipeline to aggregate the network logs into most common statistics of source IP, alert message, and user-agent to generate email alerts. This script functions as an alternative to using paid email alert functionality built into SIEMs like Splunk.
+u2json-log-emailer works within the Snort and u2json pipeline to send email alerts.
 
-This script by default will send an alert consisting of 60 seconds of logs every hour (if there was activity). It will also send a daily report at Midnight.
+### Description
+This script aggregates the json-format network logs into most common statistics of source IP, alert message, and user-agent to generate email alerts. It functions as an alternative to using paid email alert functionality built into SIEMs like Splunk.
+
+By default, this script will send an alert consisting of 60 seconds of logs every hour (if there was activity). It will also send a daily report at Midnight.
 
 ### Setup
 [Snort](https://www.snort.org/)
