@@ -4,6 +4,7 @@ import time
 import re
 import keyring
 import smtplib
+import threading
 from email.message import EmailMessage
 from collections import Counter
 from file_read_backwards import FileReadBackwards
@@ -15,6 +16,9 @@ class EventHandler(FileSystemEventHandler):
     last_modified_time = 0
     def on_any_event(self, event: FileSystemEvent) -> None:
         self.event_timer = time.time() - 1
+        # Check if this event was triggered by the daily report
+        if suppress_event.is_set():
+            return
         # Check if we have already alerted within the given email_interval (config)
         if (event.src_path == LOG_FILE) and (self.alerted == 1) and (time.time() > self.last_modified_time + EMAIL_INTERVAL):
             self.alerted = 0
@@ -259,12 +263,16 @@ observer = Observer()
 observer.schedule(event_handler, LOG_FOLDER, recursive=True)
 observer.start()
 today = datetime.date.today()
+suppress_event = threading.Event()
 try:
     while True:
+        # Check for daily report timing. Suppress event trigger while processing logs for the report.
         if datetime.date.today() > today:
+            suppress_event.set()
             analytics = get_daily_stats()
             send_report(analytics)
             today = datetime.date.today()
+            suppress_event.clear()
         time.sleep(1)
 except KeyboardInterrupt:
     print("Shutting down.")
